@@ -210,6 +210,13 @@ hookdump/
 - `POST /api/events/:eventId/replay` - Replay event
 - `GET /api/events/:eventId/replays` - Replay history
 
+## Support
+
+If you find Hookdump useful, consider supporting:
+
+[![GitHub Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-support-ea4aaa?style=flat&logo=github-sponsors)](https://github.com/sponsors/orangekame3)
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-support-yellow?style=flat&logo=buy-me-a-coffee)](https://buymeacoffee.com/miyaorg030m)
+
 ## Contributing
 
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
