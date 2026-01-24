@@ -56,6 +56,9 @@ export async function eventRoutes(fastify: FastifyInstance) {
         headers: JSON.parse(e.headers),
         body: e.body,
         contentType: e.contentType,
+        forwardStatusCode: e.forwardStatusCode,
+        forwardResponseBody: e.forwardResponseBody,
+        forwardError: e.forwardError,
         createdAt: e.createdAt,
       })),
       total,
@@ -93,6 +96,9 @@ export async function eventRoutes(fastify: FastifyInstance) {
       headers: JSON.parse(event.headers),
       body: event.body,
       contentType: event.contentType,
+      forwardStatusCode: event.forwardStatusCode,
+      forwardResponseBody: event.forwardResponseBody,
+      forwardError: event.forwardError,
       createdAt: event.createdAt,
     };
 

@@ -36,6 +36,11 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
     );
   }
 
+  const hasForwardData =
+    event.forwardStatusCode !== null ||
+    event.forwardResponseBody !== null ||
+    event.forwardError !== null;
+
   return (
     <div className="panel event-detail">
       <div className="panel-header">
@@ -89,6 +94,46 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
             <pre>{event.body ? formatJson(event.body) : "(empty)"}</pre>
           </div>
         </div>
+
+        {hasForwardData && (
+          <div className="detail-section">
+            <h3 style={{ color: "#4ade80" }}>Forward Response</h3>
+            <div className="detail-content">
+              {event.forwardError ? (
+                <div style={{ color: "#f87171" }}>
+                  Error: {event.forwardError}
+                </div>
+              ) : (
+                <>
+                  <div className="header-row">
+                    <span className="header-key">Status Code</span>
+                    <span
+                      className="header-value"
+                      style={{
+                        color:
+                          event.forwardStatusCode &&
+                          event.forwardStatusCode >= 200 &&
+                          event.forwardStatusCode < 300
+                            ? "#4ade80"
+                            : "#f87171",
+                      }}
+                    >
+                      {event.forwardStatusCode}
+                    </span>
+                  </div>
+                  {event.forwardResponseBody && (
+                    <div style={{ marginTop: "12px" }}>
+                      <div style={{ color: "#888", marginBottom: "8px" }}>
+                        Response Body:
+                      </div>
+                      <pre>{formatJson(event.forwardResponseBody)}</pre>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

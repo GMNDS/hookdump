@@ -4,5 +4,6 @@ export type {
   Replay,
   ListEventsResponse,
   CreateHookRequest,
+  UpdateHookRequest,
   CreateReplayRequest,
 } from "@hookdump/shared";

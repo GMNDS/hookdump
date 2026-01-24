@@ -7,6 +7,7 @@ interface HookListProps {
   onSelect: (hook: Hook) => void;
   onCreate: (name: string) => void;
   onDelete: (hookId: string) => void;
+  onSettings: () => void;
 }
 
 export function HookList({
@@ -15,6 +16,7 @@ export function HookList({
   onSelect,
   onCreate,
   onDelete,
+  onSettings,
 }: HookListProps) {
   const [newHookName, setNewHookName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -98,21 +100,40 @@ export function HookList({
                 }`}
                 onClick={() => onSelect(hook)}
               >
-                <div>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="hook-name">{hook.name}</div>
                   <div className="hook-date">{formatDate(hook.createdAt)}</div>
+                  {hook.forwardUrl && (
+                    <div style={{ fontSize: "11px", color: "#4ade80", marginTop: "2px" }}>
+                      Forwarding enabled
+                    </div>
+                  )}
                 </div>
-                <button
-                  className="btn btn-icon"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm("Delete this hook?")) {
-                      onDelete(hook.id);
-                    }
-                  }}
-                >
-                  X
-                </button>
+                <div style={{ display: "flex", gap: "4px" }}>
+                  <button
+                    className="btn btn-icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelect(hook);
+                      onSettings();
+                    }}
+                    title="Settings"
+                  >
+                    ...
+                  </button>
+                  <button
+                    className="btn btn-icon"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm("Delete this hook?")) {
+                        onDelete(hook.id);
+                      }
+                    }}
+                    title="Delete"
+                  >
+                    X
+                  </button>
+                </div>
               </div>
               {selectedHook?.id === hook.id && (
                 <div className="url-display">

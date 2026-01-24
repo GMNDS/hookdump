@@ -1,9 +1,24 @@
 import { z } from "zod";
 
+// Custom response configuration schema
+export const CustomResponseSchema = z.object({
+  statusCode: z.number().min(100).max(599).default(200),
+  headers: z.record(z.string()).default({}),
+  body: z.string().default(""),
+});
+
+export type CustomResponse = z.infer<typeof CustomResponseSchema>;
+
 // Hook schema
 export const HookSchema = z.object({
   id: z.string(),
   name: z.string(),
+  // Custom response configuration
+  responseStatusCode: z.number(),
+  responseHeaders: z.record(z.string()),
+  responseBody: z.string(),
+  // Forwarding configuration
+  forwardUrl: z.string().nullable(),
   createdAt: z.string(),
 });
 
@@ -18,6 +33,10 @@ export const EventSchema = z.object({
   headers: z.record(z.string()),
   body: z.string().nullable(),
   contentType: z.string().nullable(),
+  // Forward response data
+  forwardStatusCode: z.number().nullable(),
+  forwardResponseBody: z.string().nullable(),
+  forwardError: z.string().nullable(),
   createdAt: z.string(),
 });
 
@@ -39,9 +58,24 @@ export type Replay = z.infer<typeof ReplaySchema>;
 // API Request/Response schemas
 export const CreateHookRequestSchema = z.object({
   name: z.string().min(1).max(100),
+  responseStatusCode: z.number().min(100).max(599).optional().default(200),
+  responseHeaders: z.record(z.string()).optional().default({}),
+  responseBody: z.string().optional().default(""),
+  forwardUrl: z.string().url().nullable().optional().default(null),
 });
 
-export type CreateHookRequest = z.infer<typeof CreateHookRequestSchema>;
+// Use z.input for the request type (allows optional fields)
+export type CreateHookRequest = z.input<typeof CreateHookRequestSchema>;
+
+export const UpdateHookRequestSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  responseStatusCode: z.number().min(100).max(599).optional(),
+  responseHeaders: z.record(z.string()).optional(),
+  responseBody: z.string().optional(),
+  forwardUrl: z.string().url().nullable().optional(),
+});
+
+export type UpdateHookRequest = z.infer<typeof UpdateHookRequestSchema>;
 
 export const CreateHookResponseSchema = HookSchema;
 

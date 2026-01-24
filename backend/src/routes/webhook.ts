@@ -1,8 +1,9 @@
 import { FastifyInstance } from "fastify";
 import { ulid } from "ulid";
+import { request as httpRequest } from "undici";
 import { db } from "../db/client.js";
 import { hooks, events } from "../db/schema.js";
-import { eq, desc, count } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { config } from "../config.js";
 
 export async function webhookRoutes(fastify: FastifyInstance) {
@@ -38,6 +39,54 @@ export async function webhookRoutes(fastify: FastifyInstance) {
       }
     }
 
+    // Forward to target URL if configured
+    let forwardStatusCode: number | null = null;
+    let forwardResponseBody: string | null = null;
+    let forwardError: string | null = null;
+
+    if (hook.forwardUrl) {
+      try {
+        // Prepare headers (filter out hop-by-hop headers)
+        const filteredHeaders: Record<string, string> = {};
+        const hopByHopHeaders = [
+          "connection",
+          "keep-alive",
+          "proxy-authenticate",
+          "proxy-authorization",
+          "te",
+          "trailers",
+          "transfer-encoding",
+          "upgrade",
+          "host",
+        ];
+
+        for (const [key, value] of Object.entries(request.headers)) {
+          if (!hopByHopHeaders.includes(key.toLowerCase()) && value) {
+            filteredHeaders[key] = Array.isArray(value) ? value[0] : value;
+          }
+        }
+
+        // Forward the request
+        const response = await httpRequest(hook.forwardUrl, {
+          method: request.method as
+            | "GET"
+            | "POST"
+            | "PUT"
+            | "DELETE"
+            | "PATCH"
+            | "HEAD"
+            | "OPTIONS",
+          headers: filteredHeaders,
+          body: body || undefined,
+        });
+
+        forwardStatusCode = response.statusCode;
+        forwardResponseBody = await response.body.text();
+      } catch (err) {
+        forwardError = err instanceof Error ? err.message : String(err);
+      }
+    }
+
     // Create event
     const eventId = ulid();
     const now = new Date().toISOString();
@@ -50,6 +99,9 @@ export async function webhookRoutes(fastify: FastifyInstance) {
       headers: JSON.stringify(request.headers),
       body,
       contentType: (request.headers["content-type"] as string) || null,
+      forwardStatusCode,
+      forwardResponseBody,
+      forwardError,
       createdAt: now,
     });
 
@@ -74,7 +126,19 @@ export async function webhookRoutes(fastify: FastifyInstance) {
       }
     }
 
-    return reply.status(200).send({
+    // Return custom response
+    const responseHeaders = JSON.parse(hook.responseHeaders);
+    for (const [key, value] of Object.entries(responseHeaders)) {
+      reply.header(key, value as string);
+    }
+
+    // If custom response body is set, use it
+    // Otherwise return default success response
+    if (hook.responseBody) {
+      return reply.status(hook.responseStatusCode).send(hook.responseBody);
+    }
+
+    return reply.status(hook.responseStatusCode).send({
       success: true,
       eventId,
     });

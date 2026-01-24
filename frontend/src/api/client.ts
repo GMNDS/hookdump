@@ -4,6 +4,7 @@ import type {
   Replay,
   ListEventsResponse,
   CreateHookRequest,
+  UpdateHookRequest,
   CreateReplayRequest,
 } from "../types";
 
@@ -37,9 +38,17 @@ export const api = {
   // Hooks
   listHooks: () => request<Hook[]>("/api/hooks"),
 
+  getHook: (hookId: string) => request<Hook>(`/api/hooks/${hookId}`),
+
   createHook: (data: CreateHookRequest) =>
     request<Hook>("/api/hooks", {
       method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateHook: (hookId: string, data: UpdateHookRequest) =>
+    request<Hook>(`/api/hooks/${hookId}`, {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 

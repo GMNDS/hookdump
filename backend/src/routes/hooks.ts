@@ -3,7 +3,11 @@ import { ulid } from "ulid";
 import { db } from "../db/client.js";
 import { hooks } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
-import { CreateHookRequestSchema, type Hook } from "@hookdump/shared";
+import {
+  CreateHookRequestSchema,
+  UpdateHookRequestSchema,
+  type Hook,
+} from "@hookdump/shared";
 
 export async function hookRoutes(fastify: FastifyInstance) {
   // Create hook
@@ -17,19 +21,33 @@ export async function hookRoutes(fastify: FastifyInstance) {
       });
     }
 
-    const { name } = parseResult.data;
+    const {
+      name,
+      responseStatusCode,
+      responseHeaders,
+      responseBody,
+      forwardUrl,
+    } = parseResult.data;
     const id = ulid();
     const now = new Date().toISOString();
 
     await db.insert(hooks).values({
       id,
       name,
+      responseStatusCode: responseStatusCode ?? 200,
+      responseHeaders: JSON.stringify(responseHeaders ?? {}),
+      responseBody: responseBody ?? "",
+      forwardUrl: forwardUrl ?? null,
       createdAt: now,
     });
 
     const hook: Hook = {
       id,
       name,
+      responseStatusCode: responseStatusCode ?? 200,
+      responseHeaders: responseHeaders ?? {},
+      responseBody: responseBody ?? "",
+      forwardUrl: forwardUrl ?? null,
       createdAt: now,
     };
 
@@ -37,7 +55,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
   });
 
   // List hooks
-  fastify.get("/api/hooks", async (request, reply) => {
+  fastify.get("/api/hooks", async (_request, reply) => {
     const allHooks = await db
       .select()
       .from(hooks)
@@ -46,8 +64,107 @@ export async function hookRoutes(fastify: FastifyInstance) {
     const result: Hook[] = allHooks.map((h) => ({
       id: h.id,
       name: h.name,
+      responseStatusCode: h.responseStatusCode,
+      responseHeaders: JSON.parse(h.responseHeaders),
+      responseBody: h.responseBody,
+      forwardUrl: h.forwardUrl,
       createdAt: h.createdAt,
     }));
+
+    return reply.send(result);
+  });
+
+  // Get single hook
+  fastify.get<{
+    Params: { hookId: string };
+  }>("/api/hooks/:hookId", async (request, reply) => {
+    const { hookId } = request.params;
+
+    const hook = await db
+      .select()
+      .from(hooks)
+      .where(eq(hooks.id, hookId))
+      .get();
+
+    if (!hook) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Hook not found",
+      });
+    }
+
+    const result: Hook = {
+      id: hook.id,
+      name: hook.name,
+      responseStatusCode: hook.responseStatusCode,
+      responseHeaders: JSON.parse(hook.responseHeaders),
+      responseBody: hook.responseBody,
+      forwardUrl: hook.forwardUrl,
+      createdAt: hook.createdAt,
+    };
+
+    return reply.send(result);
+  });
+
+  // Update hook
+  fastify.patch<{
+    Params: { hookId: string };
+  }>("/api/hooks/:hookId", async (request, reply) => {
+    const { hookId } = request.params;
+
+    const parseResult = UpdateHookRequestSchema.safeParse(request.body);
+
+    if (!parseResult.success) {
+      return reply.status(400).send({
+        error: "validation_error",
+        message: parseResult.error.message,
+      });
+    }
+
+    const hook = await db
+      .select()
+      .from(hooks)
+      .where(eq(hooks.id, hookId))
+      .get();
+
+    if (!hook) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Hook not found",
+      });
+    }
+
+    const updates: Record<string, unknown> = {};
+    const data = parseResult.data;
+
+    if (data.name !== undefined) updates.name = data.name;
+    if (data.responseStatusCode !== undefined)
+      updates.responseStatusCode = data.responseStatusCode;
+    if (data.responseHeaders !== undefined)
+      updates.responseHeaders = JSON.stringify(data.responseHeaders);
+    if (data.responseBody !== undefined)
+      updates.responseBody = data.responseBody;
+    if (data.forwardUrl !== undefined) updates.forwardUrl = data.forwardUrl;
+
+    if (Object.keys(updates).length > 0) {
+      await db.update(hooks).set(updates).where(eq(hooks.id, hookId));
+    }
+
+    const updatedHook = await db
+      .select()
+      .from(hooks)
+      .where(eq(hooks.id, hookId))
+      .get();
+
+    const result: Hook = {
+      id: updatedHook!.id,
+      name: updatedHook!.name,
+      responseStatusCode: updatedHook!.responseStatusCode,
+      responseHeaders: JSON.parse(updatedHook!.responseHeaders),
+      responseBody: updatedHook!.responseBody,
+      forwardUrl: updatedHook!.forwardUrl,
+      createdAt: updatedHook!.createdAt,
+    };
 
     return reply.send(result);
   });

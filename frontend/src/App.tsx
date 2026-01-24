@@ -3,6 +3,7 @@ import { HookList } from "./components/HookList";
 import { EventList } from "./components/EventList";
 import { EventDetail } from "./components/EventDetail";
 import { ReplayModal } from "./components/ReplayModal";
+import { HookSettings } from "./components/HookSettings";
 import { api } from "./api/client";
 import type { Hook, Event } from "./types";
 
@@ -11,6 +12,7 @@ function App() {
   const [selectedHook, setSelectedHook] = useState<Hook | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showReplayModal, setShowReplayModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   const loadHooks = useCallback(async () => {
     try {
@@ -48,6 +50,15 @@ function App() {
     }
   };
 
+  const handleUpdateHook = (updatedHook: Hook) => {
+    setHooks((prev) =>
+      prev.map((h) => (h.id === updatedHook.id ? updatedHook : h))
+    );
+    if (selectedHook?.id === updatedHook.id) {
+      setSelectedHook(updatedHook);
+    }
+  };
+
   const handleSelectEvent = async (eventId: string) => {
     try {
       const event = await api.getEvent(eventId);
@@ -81,6 +92,7 @@ function App() {
           onSelect={setSelectedHook}
           onCreate={handleCreateHook}
           onDelete={handleDeleteHook}
+          onSettings={() => setShowSettingsModal(true)}
         />
         <EventList
           hook={selectedHook}
@@ -97,6 +109,13 @@ function App() {
         <ReplayModal
           event={selectedEvent}
           onClose={() => setShowReplayModal(false)}
+        />
+      )}
+      {showSettingsModal && selectedHook && (
+        <HookSettings
+          hook={selectedHook}
+          onClose={() => setShowSettingsModal(false)}
+          onUpdate={handleUpdateHook}
         />
       )}
     </div>
