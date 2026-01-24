@@ -1,0 +1,23 @@
+{
+  "name": "hookdump",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Webhook receiver, storage, viewer, and replay tool",
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w shared && npm run build -w backend && npm run build -w frontend",
+    "start": "npm run start -w backend"
+  },
+  "keywords": [
+    "webhook",
+    "debugging",
+    "replay"
+  ],
+  "license": "MIT"
+}

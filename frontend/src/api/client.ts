@@ -1,0 +1,73 @@
+import type {
+  Hook,
+  Event,
+  Replay,
+  ListEventsResponse,
+  CreateHookRequest,
+  CreateReplayRequest,
+} from "../types";
+
+const API_BASE = "";
+
+async function request<T>(
+  path: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.message || `HTTP error ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  return response.json();
+}
+
+export const api = {
+  // Hooks
+  listHooks: () => request<Hook[]>("/api/hooks"),
+
+  createHook: (data: CreateHookRequest) =>
+    request<Hook>("/api/hooks", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  deleteHook: (hookId: string) =>
+    request<void>(`/api/hooks/${hookId}`, {
+      method: "DELETE",
+    }),
+
+  // Events
+  listEvents: (hookId: string, page = 1, pageSize = 20) =>
+    request<ListEventsResponse>(
+      `/api/hooks/${hookId}/events?page=${page}&pageSize=${pageSize}`
+    ),
+
+  getEvent: (eventId: string) => request<Event>(`/api/events/${eventId}`),
+
+  deleteEvent: (eventId: string) =>
+    request<void>(`/api/events/${eventId}`, {
+      method: "DELETE",
+    }),
+
+  // Replays
+  createReplay: (eventId: string, data: CreateReplayRequest) =>
+    request<Replay>(`/api/events/${eventId}/replay`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  listReplays: (eventId: string) =>
+    request<Replay[]>(`/api/events/${eventId}/replays`),
+};

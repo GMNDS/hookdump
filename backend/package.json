@@ -1,0 +1,26 @@
+{
+  "name": "@hookdump/backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@hookdump/shared": "*",
+    "fastify": "^4.28.1",
+    "@fastify/cors": "^9.0.1",
+    "drizzle-orm": "^0.31.2",
+    "better-sqlite3": "^11.1.2",
+    "ulid": "^2.3.0",
+    "undici": "^6.19.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.14.10",
+    "tsx": "^4.16.2",
+    "typescript": "^5.4.5"
+  }
+}
