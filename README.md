@@ -38,6 +38,10 @@ Webhook debugging tools like RequestBin and Webhook.site are **closed-source Saa
 
 > **Your webhook data stays on your infrastructure.** Perfect for teams handling sensitive data, compliance requirements, or air-gapped environments.
 
+<p align="center">
+  <img src="docs/screenshot.jpeg" alt="Hookdump Screenshot" width="800">
+</p>
+
 ## Features
 
 - **Receive** - Create unique webhook URLs instantly
@@ -130,7 +134,12 @@ hookdump/
 
 ## API Reference
 
+### Health Check
+
+- `GET /health` - Returns `{"status": "ok"}` when the server is running
+
 ### Webhook Receiver
+
 - `* /hooks/:hookId` - Receive webhook (any HTTP method)
 
 ### Management API

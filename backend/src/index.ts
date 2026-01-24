@@ -67,7 +67,14 @@ fastify.get("/health", async () => {
 // Start server
 try {
   await fastify.listen({ port: config.port, host: config.host });
-  console.log(`Server listening on http://${config.host}:${config.port}`);
+  console.log(`
+  ╦ ╦╔═╗╔═╗╦╔═╔╦╗╦ ╦╔╦╗╔═╗
+  ╠═╣║ ║║ ║╠╩╗ ║║║ ║║║║╠═╝
+  ╩ ╩╚═╝╚═╝╩ ╩═╩╝╚═╝╩ ╩╩
+
+  Server running at http://${config.host}:${config.port}
+  Health check: http://${config.host}:${config.port}/health
+  `);
 } catch (err) {
   fastify.log.error(err);
   process.exit(1);
