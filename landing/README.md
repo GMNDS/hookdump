@@ -2,55 +2,28 @@
 
 Static landing page for [hookdump.dev](https://hookdump.dev).
 
-## Deploy to Cloudflare Pages
+## Deploy
 
-### Option 1: GitHub Integration (Recommended)
+Deployment is automated via GitHub Actions (`.github/workflows/deploy-landing.yml`).
 
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. **Workers & Pages** → **Create application** → **Pages**
-3. **Connect to Git** → Select `orangekame3/hookdump`
-4. Configure build settings:
-   - **Production branch**: `main`
-   - **Build command**: (leave empty)
-   - **Build output directory**: `landing`
-5. Click **Save and Deploy**
+On push to `main`, the landing page is deployed to Cloudflare Pages.
 
-### Option 2: Wrangler CLI
+### Manual Deploy (if needed)
 
 ```bash
-# Install wrangler
 npm install -g wrangler
-
-# Login to Cloudflare
 wrangler login
-
-# Deploy
-cd landing
-wrangler pages deploy .
+wrangler pages deploy landing --project-name=hookdump-landing
 ```
 
-### Custom Domain Setup
+### Custom Domain
 
-1. Go to your Pages project → **Custom domains**
-2. Add `hookdump.dev`
-3. If DNS is on Cloudflare, it auto-configures
-4. If DNS is elsewhere, add the CNAME record shown
+After first deploy:
+1. Cloudflare Dashboard → Pages → hookdump-landing
+2. Custom domains → Add `hookdump.dev`
 
-## Waitlist Form Setup
+## Waitlist
 
-The form uses [Formspree](https://formspree.io):
-
-1. Create account at [formspree.io](https://formspree.io)
-2. Create a new form
-3. Copy the form ID
-4. Replace `YOUR_FORM_ID` in `index.html`:
-
-```html
-<form action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
-```
-
-### Alternatives
-
-- [Tally](https://tally.so) - Free, no account needed
-- [Google Forms](https://forms.google.com) - Embed or redirect
-- [Buttondown](https://buttondown.email) - If you want newsletter later
+The waitlist form is hosted on [Tally](https://tally.so):
+- Form URL: https://tally.so/r/81ZJXY
+- Responses are collected in Tally dashboard
