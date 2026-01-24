@@ -27,6 +27,12 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
   const [monitorNotifyEmail, setMonitorNotifyEmail] = useState(
     hook.monitorNotifyEmail || ""
   );
+  const [monitorSlackWebhook, setMonitorSlackWebhook] = useState(
+    hook.monitorSlackWebhook || ""
+  );
+  const [monitorDiscordWebhook, setMonitorDiscordWebhook] = useState(
+    hook.monitorDiscordWebhook || ""
+  );
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +46,8 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
     setMonitorEnabled(hook.monitorEnabled);
     setMonitorTimeoutMinutes(hook.monitorTimeoutMinutes?.toString() || "60");
     setMonitorNotifyEmail(hook.monitorNotifyEmail || "");
+    setMonitorSlackWebhook(hook.monitorSlackWebhook || "");
+    setMonitorDiscordWebhook(hook.monitorDiscordWebhook || "");
   }, [hook]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,8 +81,13 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
         return;
       }
 
-      if (monitorEnabled && !monitorNotifyEmail.trim()) {
-        setError("Email is required when monitoring is enabled");
+      const hasNotificationMethod =
+        monitorNotifyEmail.trim() ||
+        monitorSlackWebhook.trim() ||
+        monitorDiscordWebhook.trim();
+
+      if (monitorEnabled && !hasNotificationMethod) {
+        setError("At least one notification method (Email, Slack, or Discord) is required");
         setIsLoading(false);
         return;
       }
@@ -87,7 +100,9 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
         forwardUrl: forwardUrl.trim() || null,
         monitorEnabled,
         monitorTimeoutMinutes: monitorEnabled ? timeoutMins : null,
-        monitorNotifyEmail: monitorEnabled ? monitorNotifyEmail.trim() : null,
+        monitorNotifyEmail: monitorEnabled && monitorNotifyEmail.trim() ? monitorNotifyEmail.trim() : null,
+        monitorSlackWebhook: monitorEnabled && monitorSlackWebhook.trim() ? monitorSlackWebhook.trim() : null,
+        monitorDiscordWebhook: monitorEnabled && monitorDiscordWebhook.trim() ? monitorDiscordWebhook.trim() : null,
       });
 
       onUpdate(updatedHook);
@@ -238,8 +253,34 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
                   </small>
                 </div>
 
+                <div style={{ marginTop: "16px", marginBottom: "8px", color: "#888", fontSize: "12px" }}>
+                  Configure at least one notification channel:
+                </div>
+
                 <div className="form-group">
-                  <label>Notification Email</label>
+                  <label>Slack Webhook URL</label>
+                  <input
+                    type="url"
+                    className="input"
+                    value={monitorSlackWebhook}
+                    onChange={(e) => setMonitorSlackWebhook(e.target.value)}
+                    placeholder="https://hooks.slack.com/services/..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Discord Webhook URL</label>
+                  <input
+                    type="url"
+                    className="input"
+                    value={monitorDiscordWebhook}
+                    onChange={(e) => setMonitorDiscordWebhook(e.target.value)}
+                    placeholder="https://discord.com/api/webhooks/..."
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Email (optional, requires SendGrid)</label>
                   <input
                     type="email"
                     className="input"

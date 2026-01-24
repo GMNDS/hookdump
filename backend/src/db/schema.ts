@@ -13,6 +13,8 @@ export const hooks = sqliteTable("hooks", {
   monitorEnabled: integer("monitor_enabled", { mode: "boolean" }).notNull().default(false),
   monitorTimeoutMinutes: integer("monitor_timeout_minutes"),
   monitorNotifyEmail: text("monitor_notify_email"),
+  monitorSlackWebhook: text("monitor_slack_webhook"),
+  monitorDiscordWebhook: text("monitor_discord_webhook"),
   monitorLastAlertAt: text("monitor_last_alert_at"),
   lastEventAt: text("last_event_at"),
   createdAt: text("created_at").notNull(),

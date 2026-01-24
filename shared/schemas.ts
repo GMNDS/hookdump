@@ -23,6 +23,8 @@ export const HookSchema = z.object({
   monitorEnabled: z.boolean(),
   monitorTimeoutMinutes: z.number().nullable(),
   monitorNotifyEmail: z.string().nullable(),
+  monitorSlackWebhook: z.string().nullable(),
+  monitorDiscordWebhook: z.string().nullable(),
   monitorLastAlertAt: z.string().nullable(),
   lastEventAt: z.string().nullable(),
   createdAt: z.string(),
@@ -72,6 +74,8 @@ export const CreateHookRequestSchema = z.object({
   monitorEnabled: z.boolean().optional().default(false),
   monitorTimeoutMinutes: z.number().min(1).max(1440).nullable().optional().default(null),
   monitorNotifyEmail: z.string().email().nullable().optional().default(null),
+  monitorSlackWebhook: z.string().url().nullable().optional().default(null),
+  monitorDiscordWebhook: z.string().url().nullable().optional().default(null),
 });
 
 // Use z.input for the request type (allows optional fields)
@@ -87,6 +91,8 @@ export const UpdateHookRequestSchema = z.object({
   monitorEnabled: z.boolean().optional(),
   monitorTimeoutMinutes: z.number().min(1).max(1440).nullable().optional(),
   monitorNotifyEmail: z.string().email().nullable().optional(),
+  monitorSlackWebhook: z.string().url().nullable().optional(),
+  monitorDiscordWebhook: z.string().url().nullable().optional(),
 });
 
 export type UpdateHookRequest = z.infer<typeof UpdateHookRequestSchema>;

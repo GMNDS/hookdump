@@ -3,6 +3,75 @@ import { hooks } from "../db/schema.js";
 import { eq, and, isNotNull } from "drizzle-orm";
 import { config } from "../config.js";
 
+async function sendSlackNotification(
+  webhookUrl: string,
+  hookName: string,
+  hookId: string,
+  timeoutMinutes: number
+): Promise<boolean> {
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: `🚨 *Webhook Alert*\n\nYour webhook endpoint *"${hookName}"* has not received any webhooks in the last *${timeoutMinutes} minutes*.\n\n• Hook ID: \`${hookId}\`\n• Timeout: ${timeoutMinutes} minutes\n\nPlease check your integration to ensure everything is working correctly.`,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[Monitor] Slack error: ${response.status}`);
+      return false;
+    }
+
+    console.log(`[Monitor] Slack notification sent for hook "${hookName}"`);
+    return true;
+  } catch (err) {
+    console.error("[Monitor] Failed to send Slack notification:", err);
+    return false;
+  }
+}
+
+async function sendDiscordNotification(
+  webhookUrl: string,
+  hookName: string,
+  hookId: string,
+  timeoutMinutes: number
+): Promise<boolean> {
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        embeds: [
+          {
+            title: "🚨 Webhook Alert",
+            description: `Your webhook endpoint **"${hookName}"** has not received any webhooks in the last **${timeoutMinutes} minutes**.`,
+            color: 15158332, // Red color
+            fields: [
+              { name: "Hook ID", value: `\`${hookId}\``, inline: true },
+              { name: "Timeout", value: `${timeoutMinutes} minutes`, inline: true },
+            ],
+            footer: {
+              text: "Hookdump - Open Source Webhook Debugger",
+            },
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error(`[Monitor] Discord error: ${response.status}`);
+      return false;
+    }
+
+    console.log(`[Monitor] Discord notification sent for hook "${hookName}"`);
+    return true;
+  } catch (err) {
+    console.error("[Monitor] Failed to send Discord notification:", err);
+    return false;
+  }
+}
+
 async function sendAlertEmail(
   to: string,
   hookName: string,
@@ -103,20 +172,26 @@ https://hookdump.dev`,
 export async function checkMonitors(): Promise<void> {
   const now = new Date();
 
-  // Find all hooks with monitoring enabled
+  // Find all hooks with monitoring enabled and timeout set
   const monitoredHooks = await db
     .select()
     .from(hooks)
     .where(
       and(
         eq(hooks.monitorEnabled, true),
-        isNotNull(hooks.monitorTimeoutMinutes),
-        isNotNull(hooks.monitorNotifyEmail)
+        isNotNull(hooks.monitorTimeoutMinutes)
       )
     );
 
   for (const hook of monitoredHooks) {
-    if (!hook.monitorTimeoutMinutes || !hook.monitorNotifyEmail) continue;
+    if (!hook.monitorTimeoutMinutes) continue;
+
+    // Must have at least one notification method configured
+    const hasNotificationMethod =
+      hook.monitorNotifyEmail ||
+      hook.monitorSlackWebhook ||
+      hook.monitorDiscordWebhook;
+    if (!hasNotificationMethod) continue;
 
     const timeoutMs = hook.monitorTimeoutMinutes * 60 * 1000;
     const lastEvent = hook.lastEventAt ? new Date(hook.lastEventAt) : null;
@@ -148,15 +223,44 @@ export async function checkMonitors(): Promise<void> {
     }
 
     if (shouldAlert) {
-      const success = await sendAlertEmail(
-        hook.monitorNotifyEmail,
-        hook.name,
-        hook.id,
-        hook.monitorTimeoutMinutes
-      );
+      const results: boolean[] = [];
 
-      if (success) {
-        // Update last alert time
+      // Send to all configured notification channels
+      if (hook.monitorSlackWebhook) {
+        results.push(
+          await sendSlackNotification(
+            hook.monitorSlackWebhook,
+            hook.name,
+            hook.id,
+            hook.monitorTimeoutMinutes
+          )
+        );
+      }
+
+      if (hook.monitorDiscordWebhook) {
+        results.push(
+          await sendDiscordNotification(
+            hook.monitorDiscordWebhook,
+            hook.name,
+            hook.id,
+            hook.monitorTimeoutMinutes
+          )
+        );
+      }
+
+      if (hook.monitorNotifyEmail) {
+        results.push(
+          await sendAlertEmail(
+            hook.monitorNotifyEmail,
+            hook.name,
+            hook.id,
+            hook.monitorTimeoutMinutes
+          )
+        );
+      }
+
+      // Update last alert time if at least one notification succeeded
+      if (results.some((r) => r)) {
         await db
           .update(hooks)
           .set({ monitorLastAlertAt: now.toISOString() })

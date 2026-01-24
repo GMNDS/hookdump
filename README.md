@@ -37,7 +37,7 @@ Webhook debugging tools like RequestBin and Webhook.site are **closed-source Saa
 | Replay Webhooks    | No            | $9/mo         | **Free**         |
 | Custom Response    | No            | $9/mo         | **Free**         |
 | Webhook Forwarding | No            | $9/mo         | **Free**         |
-| Monitor (Alerts)   | No            | $9/mo         | **Free**         |
+| Monitor (Slack/Discord) | No       | $9/mo         | **Free**         |
 
 > **Your webhook data stays on your infrastructure.** Perfect for teams handling sensitive data, compliance requirements, or air-gapped environments.
 
@@ -52,7 +52,7 @@ Webhook debugging tools like RequestBin and Webhook.site are **closed-source Saa
 - **Replay** - Re-send captured webhooks to any target URL
 - **Custom Response** - Configure status code, headers, and body for webhook responses
 - **Webhook Forwarding** - Forward incoming webhooks to localhost or any URL (like ngrok)
-- **Monitor** - Get email alerts when webhooks stop arriving
+- **Monitor** - Get Slack/Discord/email alerts when webhooks stop arriving
 - **Store** - SQLite-based storage, no external database needed
 - **Self-Host** - One command Docker deployment
 
@@ -122,6 +122,25 @@ Now webhooks sent to Hookdump will be:
 1. Stored for inspection
 2. Forwarded to your local server
 3. Forward response recorded for debugging
+
+### Monitor (Alerts)
+
+Get notified via Slack or Discord when webhooks stop arriving:
+
+```bash
+curl -X PATCH http://localhost:8080/api/hooks/{hookId} \
+  -H "Content-Type: application/json" \
+  -d '{
+    "monitorEnabled": true,
+    "monitorTimeoutMinutes": 60,
+    "monitorSlackWebhook": "https://hooks.slack.com/services/xxx"
+  }'
+```
+
+Supports:
+- **Slack** - `monitorSlackWebhook`
+- **Discord** - `monitorDiscordWebhook`
+- **Email** - `monitorNotifyEmail` (requires SendGrid)
 
 ## Self-Hosting
 

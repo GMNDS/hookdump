@@ -30,6 +30,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
       monitorEnabled,
       monitorTimeoutMinutes,
       monitorNotifyEmail,
+      monitorSlackWebhook,
+      monitorDiscordWebhook,
     } = parseResult.data;
     const id = ulid();
     const now = new Date().toISOString();
@@ -44,6 +46,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
       monitorEnabled: monitorEnabled ?? false,
       monitorTimeoutMinutes: monitorTimeoutMinutes ?? null,
       monitorNotifyEmail: monitorNotifyEmail ?? null,
+      monitorSlackWebhook: monitorSlackWebhook ?? null,
+      monitorDiscordWebhook: monitorDiscordWebhook ?? null,
       createdAt: now,
     });
 
@@ -57,6 +61,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
       monitorEnabled: monitorEnabled ?? false,
       monitorTimeoutMinutes: monitorTimeoutMinutes ?? null,
       monitorNotifyEmail: monitorNotifyEmail ?? null,
+      monitorSlackWebhook: monitorSlackWebhook ?? null,
+      monitorDiscordWebhook: monitorDiscordWebhook ?? null,
       monitorLastAlertAt: null,
       lastEventAt: null,
       createdAt: now,
@@ -82,6 +88,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
       monitorEnabled: h.monitorEnabled,
       monitorTimeoutMinutes: h.monitorTimeoutMinutes,
       monitorNotifyEmail: h.monitorNotifyEmail,
+      monitorSlackWebhook: h.monitorSlackWebhook,
+      monitorDiscordWebhook: h.monitorDiscordWebhook,
       monitorLastAlertAt: h.monitorLastAlertAt,
       lastEventAt: h.lastEventAt,
       createdAt: h.createdAt,
@@ -119,6 +127,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
       monitorEnabled: hook.monitorEnabled,
       monitorTimeoutMinutes: hook.monitorTimeoutMinutes,
       monitorNotifyEmail: hook.monitorNotifyEmail,
+      monitorSlackWebhook: hook.monitorSlackWebhook,
+      monitorDiscordWebhook: hook.monitorDiscordWebhook,
       monitorLastAlertAt: hook.monitorLastAlertAt,
       lastEventAt: hook.lastEventAt,
       createdAt: hook.createdAt,
@@ -172,6 +182,10 @@ export async function hookRoutes(fastify: FastifyInstance) {
       updates.monitorTimeoutMinutes = data.monitorTimeoutMinutes;
     if (data.monitorNotifyEmail !== undefined)
       updates.monitorNotifyEmail = data.monitorNotifyEmail;
+    if (data.monitorSlackWebhook !== undefined)
+      updates.monitorSlackWebhook = data.monitorSlackWebhook;
+    if (data.monitorDiscordWebhook !== undefined)
+      updates.monitorDiscordWebhook = data.monitorDiscordWebhook;
 
     if (Object.keys(updates).length > 0) {
       await db.update(hooks).set(updates).where(eq(hooks.id, hookId));
@@ -193,6 +207,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
       monitorEnabled: updatedHook!.monitorEnabled,
       monitorTimeoutMinutes: updatedHook!.monitorTimeoutMinutes,
       monitorNotifyEmail: updatedHook!.monitorNotifyEmail,
+      monitorSlackWebhook: updatedHook!.monitorSlackWebhook,
+      monitorDiscordWebhook: updatedHook!.monitorDiscordWebhook,
       monitorLastAlertAt: updatedHook!.monitorLastAlertAt,
       lastEventAt: updatedHook!.lastEventAt,
       createdAt: updatedHook!.createdAt,

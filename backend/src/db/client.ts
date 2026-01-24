@@ -104,6 +104,8 @@ export function initDatabase() {
   );
   addColumnIfNotExists("hooks", "monitor_timeout_minutes", "INTEGER");
   addColumnIfNotExists("hooks", "monitor_notify_email", "TEXT");
+  addColumnIfNotExists("hooks", "monitor_slack_webhook", "TEXT");
+  addColumnIfNotExists("hooks", "monitor_discord_webhook", "TEXT");
   addColumnIfNotExists("hooks", "monitor_last_alert_at", "TEXT");
   addColumnIfNotExists("hooks", "last_event_at", "TEXT");
 }
