@@ -169,11 +169,13 @@ services:
 
 ### Configuration
 
-| Variable              | Default              | Description           |
-| --------------------- | -------------------- | --------------------- |
-| `PORT`                | `3000`               | Backend port          |
-| `DATABASE_PATH`       | `./data/hookdump.db` | SQLite path           |
-| `MAX_EVENTS_PER_HOOK` | `100`                | Event retention limit |
+| Variable              | Default              | Description                    |
+| --------------------- | -------------------- | ------------------------------ |
+| `PORT`                | `3000`               | Backend port                   |
+| `DATABASE_PATH`       | `./data/hookdump.db` | SQLite path                    |
+| `MAX_EVENTS_PER_HOOK` | `100`                | Event retention limit          |
+| `SENDGRID_API_KEY`    | -                    | SendGrid API key (for alerts)  |
+| `EMAIL_FROM`          | `alerts@hookdump.dev`| From address for alert emails  |
 
 ## Architecture
 

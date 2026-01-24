@@ -1,37 +1,103 @@
 import { db } from "../db/client.js";
 import { hooks } from "../db/schema.js";
-import { eq, and, isNotNull, lt, or, isNull } from "drizzle-orm";
+import { eq, and, isNotNull } from "drizzle-orm";
 import { config } from "../config.js";
 
-// Simple email sending using fetch (no external dependencies)
 async function sendAlertEmail(
   to: string,
   hookName: string,
   hookId: string,
   timeoutMinutes: number
 ): Promise<boolean> {
-  // If no SMTP is configured, log to console
-  if (!config.smtpHost) {
-    console.log(`[Monitor Alert] Hook "${hookName}" (${hookId}) has not received webhooks for ${timeoutMinutes} minutes. Would send email to: ${to}`);
+  // If no SendGrid API key is configured, log to console
+  if (!config.sendgridApiKey) {
+    console.log(
+      `[Monitor Alert] Hook "${hookName}" (${hookId}) has not received webhooks for ${timeoutMinutes} minutes. Would send email to: ${to}`
+    );
     return true;
   }
 
-  // For production, you would integrate with an email service here
-  // Options: Resend, SendGrid, AWS SES, SMTP
-  // For now, we'll just log and return true
-  console.log(`[Monitor Alert] Sending alert to ${to} for hook "${hookName}"`);
+  try {
+    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.sendgridApiKey}`,
+      },
+      body: JSON.stringify({
+        personalizations: [
+          {
+            to: [{ email: to }],
+            subject: `[Hookdump] Alert: No webhooks received for "${hookName}"`,
+          },
+        ],
+        from: { email: config.emailFrom },
+        content: [
+          {
+            type: "text/plain",
+            value: `Your webhook endpoint "${hookName}" has not received any webhooks in the last ${timeoutMinutes} minutes.
 
-  // TODO: Implement actual email sending
-  // Example with Resend:
-  // const resend = new Resend(config.resendApiKey);
-  // await resend.emails.send({
-  //   from: 'alerts@hookdump.dev',
-  //   to,
-  //   subject: `[Hookdump] Alert: No webhooks received for "${hookName}"`,
-  //   text: `Your hook "${hookName}" has not received any webhooks in the last ${timeoutMinutes} minutes.`
-  // });
+Hook ID: ${hookId}
+Timeout: ${timeoutMinutes} minutes
 
-  return true;
+This could indicate:
+- The external service stopped sending webhooks
+- Network connectivity issues
+- Configuration changes on the sending side
+
+Please check your integration to ensure everything is working correctly.
+
+---
+Hookdump - Open Source Webhook Debugger
+https://hookdump.dev`,
+          },
+          {
+            type: "text/html",
+            value: `
+<h2>Webhook Alert</h2>
+<p>Your webhook endpoint <strong>"${hookName}"</strong> has not received any webhooks in the last <strong>${timeoutMinutes} minutes</strong>.</p>
+
+<table style="border-collapse: collapse; margin: 20px 0;">
+  <tr>
+    <td style="padding: 8px; border: 1px solid #ddd;"><strong>Hook ID</strong></td>
+    <td style="padding: 8px; border: 1px solid #ddd;"><code>${hookId}</code></td>
+  </tr>
+  <tr>
+    <td style="padding: 8px; border: 1px solid #ddd;"><strong>Timeout</strong></td>
+    <td style="padding: 8px; border: 1px solid #ddd;">${timeoutMinutes} minutes</td>
+  </tr>
+</table>
+
+<p>This could indicate:</p>
+<ul>
+  <li>The external service stopped sending webhooks</li>
+  <li>Network connectivity issues</li>
+  <li>Configuration changes on the sending side</li>
+</ul>
+
+<p>Please check your integration to ensure everything is working correctly.</p>
+
+<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+<p style="color: #666; font-size: 12px;">
+  <a href="https://hookdump.dev">Hookdump</a> - Open Source Webhook Debugger
+</p>`,
+          },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Monitor] SendGrid error: ${response.status} - ${errorText}`);
+      return false;
+    }
+
+    console.log(`[Monitor] Alert sent to ${to} for hook "${hookName}"`);
+    return true;
+  } catch (err) {
+    console.error("[Monitor] Failed to send email:", err);
+    return false;
+  }
 }
 
 export async function checkMonitors(): Promise<void> {
