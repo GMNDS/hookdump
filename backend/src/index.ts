@@ -65,6 +65,13 @@ fastify.get("/health", async () => {
   return { status: "ok" };
 });
 
+// App config (for frontend)
+fastify.get("/api/config", async () => {
+  return {
+    demoMode: config.demoMode,
+  };
+});
+
 // Start server
 try {
   await fastify.listen({ port: config.port, host: config.host });

@@ -13,6 +13,7 @@ function App() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showReplayModal, setShowReplayModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
 
   const loadHooks = useCallback(async () => {
     try {
@@ -25,6 +26,12 @@ function App() {
 
   useEffect(() => {
     loadHooks();
+    // Load config
+    api.getConfig().then((config) => {
+      setDemoMode(config.demoMode);
+    }).catch(() => {
+      // Ignore config errors
+    });
   }, [loadHooks]);
 
   const handleCreateHook = async (name: string) => {
@@ -81,6 +88,14 @@ function App() {
 
   return (
     <div className="app">
+      {demoMode && (
+        <div className="demo-banner">
+          Demo Mode - Data resets daily. Don't send sensitive data.{" "}
+          <a href="https://github.com/orangekame3/hookdump" target="_blank" rel="noopener noreferrer">
+            Self-host for production
+          </a>
+        </div>
+      )}
       <header className="header">
         <h1>Hookdump</h1>
         <span className="subtitle">Webhook Debugger</span>

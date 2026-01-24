@@ -34,7 +34,14 @@ async function request<T>(
   return response.json();
 }
 
+export interface AppConfig {
+  demoMode: boolean;
+}
+
 export const api = {
+  // Config
+  getConfig: () => request<AppConfig>("/api/config"),
+
   // Hooks
   listHooks: () => request<Hook[]>("/api/hooks"),
 
