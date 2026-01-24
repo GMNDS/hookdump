@@ -129,10 +129,26 @@ export function EventList({
               title={formatFullDate(event.createdAt)}
             >
               <div className="event-info">
-                <div>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <span className={`event-method ${getMethodClass(event.method)}`}>
                     {event.method}
                   </span>
+                  {event.signatureProvider && (
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        padding: "1px 4px",
+                        borderRadius: "3px",
+                        background: event.signatureValid
+                          ? "rgba(74, 222, 128, 0.2)"
+                          : "rgba(248, 113, 113, 0.2)",
+                        color: event.signatureValid ? "#4ade80" : "#f87171",
+                      }}
+                      title={`${event.signatureProvider}: ${event.signatureValid ? "Valid" : "Invalid"}`}
+                    >
+                      {event.signatureValid ? "SIG" : "SIG"}
+                    </span>
+                  )}
                   <span className="event-path">{event.path}</span>
                 </div>
                 <div className="event-date">{formatDate(event.createdAt)}</div>

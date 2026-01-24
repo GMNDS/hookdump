@@ -19,6 +19,8 @@ export const HookSchema = z.object({
   responseBody: z.string(),
   // Forwarding configuration
   forwardUrl: z.string().nullable(),
+  // Signature validation
+  signatureSecret: z.string().nullable(),
   // Monitor configuration
   monitorEnabled: z.boolean(),
   monitorTimeoutMinutes: z.number().nullable(),
@@ -32,6 +34,18 @@ export const HookSchema = z.object({
 
 export type Hook = z.infer<typeof HookSchema>;
 
+// Signature validation providers
+export const SignatureProviderSchema = z.enum([
+  "stripe",
+  "github",
+  "shopify",
+  "slack",
+  "twilio",
+  "unknown",
+]);
+
+export type SignatureProvider = z.infer<typeof SignatureProviderSchema>;
+
 // Event schema
 export const EventSchema = z.object({
   id: z.string(),
@@ -41,6 +55,9 @@ export const EventSchema = z.object({
   headers: z.record(z.string()),
   body: z.string().nullable(),
   contentType: z.string().nullable(),
+  // Signature validation
+  signatureProvider: SignatureProviderSchema.nullable(),
+  signatureValid: z.boolean().nullable(),
   // Forward response data
   forwardStatusCode: z.number().nullable(),
   forwardResponseBody: z.string().nullable(),
@@ -70,6 +87,8 @@ export const CreateHookRequestSchema = z.object({
   responseHeaders: z.record(z.string()).optional().default({}),
   responseBody: z.string().optional().default(""),
   forwardUrl: z.string().url().nullable().optional().default(null),
+  // Signature validation
+  signatureSecret: z.string().nullable().optional().default(null),
   // Monitor configuration
   monitorEnabled: z.boolean().optional().default(false),
   monitorTimeoutMinutes: z.number().min(1).max(1440).nullable().optional().default(null),
@@ -87,6 +106,8 @@ export const UpdateHookRequestSchema = z.object({
   responseHeaders: z.record(z.string()).optional(),
   responseBody: z.string().optional(),
   forwardUrl: z.string().url().nullable().optional(),
+  // Signature validation
+  signatureSecret: z.string().nullable().optional(),
   // Monitor configuration
   monitorEnabled: z.boolean().optional(),
   monitorTimeoutMinutes: z.number().min(1).max(1440).nullable().optional(),

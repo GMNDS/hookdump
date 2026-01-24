@@ -2,7 +2,7 @@ import { FastifyInstance } from "fastify";
 import { db } from "../db/client.js";
 import { events, hooks } from "../db/schema.js";
 import { eq, desc, count } from "drizzle-orm";
-import type { Event, ListEventsResponse } from "@hookdump/shared";
+import type { Event, ListEventsResponse, SignatureProvider } from "@hookdump/shared";
 
 export async function eventRoutes(fastify: FastifyInstance) {
   // List events for a hook
@@ -56,6 +56,8 @@ export async function eventRoutes(fastify: FastifyInstance) {
         headers: JSON.parse(e.headers),
         body: e.body,
         contentType: e.contentType,
+        signatureProvider: e.signatureProvider as SignatureProvider | null,
+        signatureValid: e.signatureValid,
         forwardStatusCode: e.forwardStatusCode,
         forwardResponseBody: e.forwardResponseBody,
         forwardError: e.forwardError,
@@ -96,6 +98,8 @@ export async function eventRoutes(fastify: FastifyInstance) {
       headers: JSON.parse(event.headers),
       body: event.body,
       contentType: event.contentType,
+      signatureProvider: event.signatureProvider as SignatureProvider | null,
+      signatureValid: event.signatureValid,
       forwardStatusCode: event.forwardStatusCode,
       forwardResponseBody: event.forwardResponseBody,
       forwardError: event.forwardError,

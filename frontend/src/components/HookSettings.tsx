@@ -19,6 +19,9 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
   );
   const [forwardUrl, setForwardUrl] = useState(hook.forwardUrl || "");
 
+  // Signature validation
+  const [signatureSecret, setSignatureSecret] = useState(hook.signatureSecret || "");
+
   // Monitor settings
   const [monitorEnabled, setMonitorEnabled] = useState(hook.monitorEnabled);
   const [monitorTimeoutMinutes, setMonitorTimeoutMinutes] = useState(
@@ -43,6 +46,7 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
     setResponseBody(hook.responseBody);
     setResponseHeaders(JSON.stringify(hook.responseHeaders, null, 2));
     setForwardUrl(hook.forwardUrl || "");
+    setSignatureSecret(hook.signatureSecret || "");
     setMonitorEnabled(hook.monitorEnabled);
     setMonitorTimeoutMinutes(hook.monitorTimeoutMinutes?.toString() || "60");
     setMonitorNotifyEmail(hook.monitorNotifyEmail || "");
@@ -98,6 +102,7 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
         responseBody,
         responseHeaders: parsedHeaders,
         forwardUrl: forwardUrl.trim() || null,
+        signatureSecret: signatureSecret.trim() || null,
         monitorEnabled,
         monitorTimeoutMinutes: monitorEnabled ? timeoutMins : null,
         monitorNotifyEmail: monitorEnabled && monitorNotifyEmail.trim() ? monitorNotifyEmail.trim() : null,
@@ -206,6 +211,25 @@ export function HookSettings({ hook, onClose, onUpdate }: HookSettingsProps) {
               />
               <small style={{ color: "#666", display: "block", marginTop: "4px" }}>
                 Incoming webhooks will be forwarded to this URL (like ngrok)
+              </small>
+            </div>
+
+            <h3 style={{ marginTop: "24px", marginBottom: "16px", color: "#3b82f6", fontSize: "14px" }}>
+              Signature Validation (Verify webhook authenticity)
+            </h3>
+
+            <div className="form-group">
+              <label>Webhook Secret</label>
+              <input
+                type="password"
+                className="input"
+                value={signatureSecret}
+                onChange={(e) => setSignatureSecret(e.target.value)}
+                placeholder="whsec_... or your webhook signing secret"
+                style={{ fontFamily: "monospace" }}
+              />
+              <small style={{ color: "#666", display: "block", marginTop: "4px" }}>
+                Auto-detects: Stripe, GitHub, Shopify, Slack, Twilio
               </small>
             </div>
 

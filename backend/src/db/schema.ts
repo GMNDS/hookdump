@@ -9,6 +9,8 @@ export const hooks = sqliteTable("hooks", {
   responseBody: text("response_body").notNull().default(""),
   // Forwarding configuration
   forwardUrl: text("forward_url"),
+  // Signature validation
+  signatureSecret: text("signature_secret"),
   // Monitor configuration
   monitorEnabled: integer("monitor_enabled", { mode: "boolean" }).notNull().default(false),
   monitorTimeoutMinutes: integer("monitor_timeout_minutes"),
@@ -30,6 +32,9 @@ export const events = sqliteTable("events", {
   headers: text("headers").notNull(), // JSON string
   body: text("body"),
   contentType: text("content_type"),
+  // Signature validation
+  signatureProvider: text("signature_provider"),
+  signatureValid: integer("signature_valid", { mode: "boolean" }),
   // Forward response data
   forwardStatusCode: integer("forward_status_code"),
   forwardResponseBody: text("forward_response_body"),

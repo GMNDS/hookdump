@@ -73,6 +73,40 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
                 {formatDate(event.createdAt)}
               </span>
             </div>
+            {event.signatureProvider && (
+              <div className="header-row">
+                <span className="header-key">Signature</span>
+                <span
+                  className="header-value"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      background: event.signatureValid
+                        ? "rgba(74, 222, 128, 0.15)"
+                        : "rgba(248, 113, 113, 0.15)",
+                      color: event.signatureValid ? "#4ade80" : "#f87171",
+                    }}
+                  >
+                    {event.signatureValid ? "Valid" : "Invalid"}
+                  </span>
+                  <span style={{ color: "#888", textTransform: "capitalize" }}>
+                    ({event.signatureProvider})
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

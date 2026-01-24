@@ -5,6 +5,7 @@ import { db } from "../db/client.js";
 import { hooks, events } from "../db/schema.js";
 import { eq, count } from "drizzle-orm";
 import { config } from "../config.js";
+import { validateSignature } from "../services/signature.js";
 
 export async function webhookRoutes(fastify: FastifyInstance) {
   // Receive webhook - supports all HTTP methods
@@ -36,6 +37,31 @@ export async function webhookRoutes(fastify: FastifyInstance) {
         body = request.body.toString("utf-8");
       } else {
         body = JSON.stringify(request.body);
+      }
+    }
+
+    // Validate signature if secret is configured
+    let signatureProvider: string | null = null;
+    let signatureValid: boolean | null = null;
+
+    if (hook.signatureSecret && body) {
+      const headersObj: Record<string, string> = {};
+      for (const [key, value] of Object.entries(request.headers)) {
+        if (value) {
+          headersObj[key] = Array.isArray(value) ? value[0] : value;
+        }
+      }
+
+      const result = validateSignature(
+        headersObj,
+        body,
+        hook.signatureSecret,
+        request.url
+      );
+
+      if (result) {
+        signatureProvider = result.provider;
+        signatureValid = result.valid;
       }
     }
 
@@ -99,6 +125,8 @@ export async function webhookRoutes(fastify: FastifyInstance) {
       headers: JSON.stringify(request.headers),
       body,
       contentType: (request.headers["content-type"] as string) || null,
+      signatureProvider,
+      signatureValid,
       forwardStatusCode,
       forwardResponseBody,
       forwardError,

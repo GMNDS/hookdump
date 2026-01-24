@@ -38,6 +38,7 @@ Webhook debugging tools like RequestBin and Webhook.site are **closed-source Saa
 | Custom Response    | No            | $9/mo         | **Free**         |
 | Webhook Forwarding | No            | $9/mo         | **Free**         |
 | Monitor (Slack/Discord) | No       | $9/mo         | **Free**         |
+| Signature Validation | No          | No            | **Yes**          |
 
 > **Your webhook data stays on your infrastructure.** Perfect for teams handling sensitive data, compliance requirements, or air-gapped environments.
 
@@ -53,6 +54,7 @@ Webhook debugging tools like RequestBin and Webhook.site are **closed-source Saa
 - **Custom Response** - Configure status code, headers, and body for webhook responses
 - **Webhook Forwarding** - Forward incoming webhooks to localhost or any URL (like ngrok)
 - **Monitor** - Get Slack/Discord/email alerts when webhooks stop arriving
+- **Signature Validation** - Auto-verify Stripe, GitHub, Shopify, Slack, Twilio signatures
 - **Store** - SQLite-based storage, no external database needed
 - **Self-Host** - One command Docker deployment
 
@@ -141,6 +143,25 @@ Supports:
 - **Slack** - `monitorSlackWebhook`
 - **Discord** - `monitorDiscordWebhook`
 - **Email** - `monitorNotifyEmail` (requires SendGrid)
+
+### Signature Validation
+
+Automatically verify webhook signatures to debug authentication issues:
+
+```bash
+curl -X PATCH http://localhost:8080/api/hooks/{hookId} \
+  -H "Content-Type: application/json" \
+  -d '{"signatureSecret": "whsec_your_stripe_webhook_secret"}'
+```
+
+Auto-detects and validates:
+- **Stripe** - `Stripe-Signature` header
+- **GitHub** - `X-Hub-Signature-256` header
+- **Shopify** - `X-Shopify-Hmac-Sha256` header
+- **Slack** - `X-Slack-Signature` header
+- **Twilio** - `X-Twilio-Signature` header
+
+Events will show a Valid / Invalid badge to help debug webhook authentication issues.
 
 ## Self-Hosting
 

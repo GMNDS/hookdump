@@ -108,4 +108,9 @@ export function initDatabase() {
   addColumnIfNotExists("hooks", "monitor_discord_webhook", "TEXT");
   addColumnIfNotExists("hooks", "monitor_last_alert_at", "TEXT");
   addColumnIfNotExists("hooks", "last_event_at", "TEXT");
+
+  // Signature validation columns
+  addColumnIfNotExists("hooks", "signature_secret", "TEXT");
+  addColumnIfNotExists("events", "signature_provider", "TEXT");
+  addColumnIfNotExists("events", "signature_valid", "INTEGER");
 }

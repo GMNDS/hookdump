@@ -27,6 +27,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
       responseHeaders,
       responseBody,
       forwardUrl,
+      signatureSecret,
       monitorEnabled,
       monitorTimeoutMinutes,
       monitorNotifyEmail,
@@ -43,6 +44,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
       responseHeaders: JSON.stringify(responseHeaders ?? {}),
       responseBody: responseBody ?? "",
       forwardUrl: forwardUrl ?? null,
+      signatureSecret: signatureSecret ?? null,
       monitorEnabled: monitorEnabled ?? false,
       monitorTimeoutMinutes: monitorTimeoutMinutes ?? null,
       monitorNotifyEmail: monitorNotifyEmail ?? null,
@@ -58,6 +60,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
       responseHeaders: responseHeaders ?? {},
       responseBody: responseBody ?? "",
       forwardUrl: forwardUrl ?? null,
+      signatureSecret: signatureSecret ?? null,
       monitorEnabled: monitorEnabled ?? false,
       monitorTimeoutMinutes: monitorTimeoutMinutes ?? null,
       monitorNotifyEmail: monitorNotifyEmail ?? null,
@@ -85,6 +88,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
       responseHeaders: JSON.parse(h.responseHeaders),
       responseBody: h.responseBody,
       forwardUrl: h.forwardUrl,
+      signatureSecret: h.signatureSecret,
       monitorEnabled: h.monitorEnabled,
       monitorTimeoutMinutes: h.monitorTimeoutMinutes,
       monitorNotifyEmail: h.monitorNotifyEmail,
@@ -124,6 +128,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
       responseHeaders: JSON.parse(hook.responseHeaders),
       responseBody: hook.responseBody,
       forwardUrl: hook.forwardUrl,
+      signatureSecret: hook.signatureSecret,
       monitorEnabled: hook.monitorEnabled,
       monitorTimeoutMinutes: hook.monitorTimeoutMinutes,
       monitorNotifyEmail: hook.monitorNotifyEmail,
@@ -176,6 +181,8 @@ export async function hookRoutes(fastify: FastifyInstance) {
     if (data.responseBody !== undefined)
       updates.responseBody = data.responseBody;
     if (data.forwardUrl !== undefined) updates.forwardUrl = data.forwardUrl;
+    if (data.signatureSecret !== undefined)
+      updates.signatureSecret = data.signatureSecret;
     if (data.monitorEnabled !== undefined)
       updates.monitorEnabled = data.monitorEnabled;
     if (data.monitorTimeoutMinutes !== undefined)
@@ -204,6 +211,7 @@ export async function hookRoutes(fastify: FastifyInstance) {
       responseHeaders: JSON.parse(updatedHook!.responseHeaders),
       responseBody: updatedHook!.responseBody,
       forwardUrl: updatedHook!.forwardUrl,
+      signatureSecret: updatedHook!.signatureSecret,
       monitorEnabled: updatedHook!.monitorEnabled,
       monitorTimeoutMinutes: updatedHook!.monitorTimeoutMinutes,
       monitorNotifyEmail: updatedHook!.monitorNotifyEmail,
