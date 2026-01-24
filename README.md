@@ -123,7 +123,30 @@ Now webhooks sent to Hookdump will be:
 
 ## Self-Hosting
 
-### Docker Compose
+### Docker Compose (Local)
+
+```bash
+docker compose up -d
+# Open http://localhost:8080
+```
+
+### Docker Compose + Cloudflare Tunnel (Production)
+
+Expose to the internet for free using Cloudflare Tunnel:
+
+```bash
+# 1. Create tunnel at Cloudflare Zero Trust dashboard
+# 2. Copy the tunnel token
+
+# 3. Create .env file
+cp .env.example .env
+# Edit .env and set TUNNEL_TOKEN
+
+# 4. Run with tunnel profile
+docker compose --profile tunnel up -d
+```
+
+### Docker Compose (Cloud)
 
 ```yaml
 services:
