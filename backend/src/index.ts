@@ -1,5 +1,6 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
 import { config } from "./config.js";
 import { initDatabase } from "./db/client.js";
 import { webhookRoutes } from "./routes/webhook.js";
@@ -15,6 +16,13 @@ const fastify = Fastify({
 // Register CORS
 await fastify.register(cors, {
   origin: true,
+});
+
+await fastify.register(multipart, {
+  limits: {
+    files: 20,
+    fields: 200,
+  },
 });
 
 // Register content type parsers for raw body access

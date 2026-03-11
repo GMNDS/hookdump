@@ -46,6 +46,23 @@ export const SignatureProviderSchema = z.enum([
 
 export type SignatureProvider = z.infer<typeof SignatureProviderSchema>;
 
+export const BodyEncodingSchema = z.enum(["utf8", "base64", "multipart"]);
+
+export type BodyEncoding = z.infer<typeof BodyEncodingSchema>;
+
+export const MultipartPartSchema = z.object({
+  kind: z.enum(["field", "file"]),
+  name: z.string(),
+  filename: z.string().nullable(),
+  contentType: z.string().nullable(),
+  size: z.number(),
+  value: z.string().nullable(),
+  dataBase64: z.string().nullable(),
+  truncated: z.boolean(),
+});
+
+export type MultipartPart = z.infer<typeof MultipartPartSchema>;
+
 // Event schema
 export const EventSchema = z.object({
   id: z.string(),
@@ -53,7 +70,14 @@ export const EventSchema = z.object({
   method: z.string(),
   path: z.string(),
   headers: z.record(z.string()),
+  // Legacy alias, mirrors bodyText for compatibility.
   body: z.string().nullable(),
+  bodyText: z.string().nullable(),
+  bodyBase64: z.string().nullable(),
+  bodyEncoding: BodyEncodingSchema.nullable(),
+  bodySize: z.number(),
+  isBinary: z.boolean(),
+  multipartParts: z.array(MultipartPartSchema).nullable(),
   contentType: z.string().nullable(),
   // Signature validation
   signatureProvider: SignatureProviderSchema.nullable(),

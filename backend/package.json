@@ -9,11 +9,12 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
-    "@hookdump/shared": "*",
-    "fastify": "^4.28.1",
     "@fastify/cors": "^9.0.1",
-    "drizzle-orm": "^0.31.2",
+    "@fastify/multipart": "^8.3.1",
+    "@hookdump/shared": "*",
     "better-sqlite3": "^11.1.2",
+    "drizzle-orm": "^0.31.2",
+    "fastify": "^4.28.1",
     "ulid": "^2.3.0",
     "undici": "^6.19.2"
   },

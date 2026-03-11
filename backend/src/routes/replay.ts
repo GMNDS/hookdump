@@ -5,6 +5,11 @@ import { db } from "../db/client.js";
 import { events, replays } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { CreateReplayRequestSchema, type Replay } from "@hookdump/shared";
+import {
+  buildForwardBody,
+  parseMultipartParts,
+  removeHeaderCaseInsensitive,
+} from "../services/event-body.js";
 
 export async function replayRoutes(fastify: FastifyInstance) {
   // Create replay (send event to target URL)
@@ -66,6 +71,24 @@ export async function replayRoutes(fastify: FastifyInstance) {
         }
       }
 
+      const multipartParts = parseMultipartParts(event.multipartParts);
+      const forwardBody = buildForwardBody({
+        bodyEncoding: (event.bodyEncoding as "utf8" | "base64" | "multipart" | null) ??
+          (event.body ? "utf8" : null),
+        bodyText: event.bodyText ?? event.body,
+        bodyBase64: event.bodyBase64,
+        multipartParts,
+      });
+
+      if (forwardBody.isMultipart) {
+        removeHeaderCaseInsensitive(filteredHeaders, "content-type");
+      }
+      removeHeaderCaseInsensitive(filteredHeaders, "content-length");
+
+      if (forwardBody.error) {
+        throw new Error(forwardBody.error);
+      }
+
       // Send request
       const response = await httpRequest(targetUrl, {
         method: event.method as
@@ -77,7 +100,7 @@ export async function replayRoutes(fastify: FastifyInstance) {
           | "HEAD"
           | "OPTIONS",
         headers: filteredHeaders,
-        body: event.body || undefined,
+        body: forwardBody.body,
       });
 
       statusCode = response.statusCode;

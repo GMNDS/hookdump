@@ -57,6 +57,12 @@ export function initDatabase() {
       path TEXT NOT NULL,
       headers TEXT NOT NULL,
       body TEXT,
+      body_text TEXT,
+      body_base64 TEXT,
+      body_encoding TEXT,
+      body_size INTEGER NOT NULL DEFAULT 0,
+      is_binary INTEGER NOT NULL DEFAULT 0,
+      multipart_parts TEXT,
       content_type TEXT,
       forward_status_code INTEGER,
       forward_response_body TEXT,
@@ -95,6 +101,12 @@ export function initDatabase() {
   addColumnIfNotExists("events", "forward_status_code", "INTEGER");
   addColumnIfNotExists("events", "forward_response_body", "TEXT");
   addColumnIfNotExists("events", "forward_error", "TEXT");
+  addColumnIfNotExists("events", "body_text", "TEXT");
+  addColumnIfNotExists("events", "body_base64", "TEXT");
+  addColumnIfNotExists("events", "body_encoding", "TEXT");
+  addColumnIfNotExists("events", "body_size", "INTEGER NOT NULL DEFAULT 0");
+  addColumnIfNotExists("events", "is_binary", "INTEGER NOT NULL DEFAULT 0");
+  addColumnIfNotExists("events", "multipart_parts", "TEXT");
 
   // Monitor columns
   addColumnIfNotExists(

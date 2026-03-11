@@ -31,6 +31,12 @@ export const events = sqliteTable("events", {
   path: text("path").notNull(),
   headers: text("headers").notNull(), // JSON string
   body: text("body"),
+  bodyText: text("body_text"),
+  bodyBase64: text("body_base64"),
+  bodyEncoding: text("body_encoding"),
+  bodySize: integer("body_size").notNull().default(0),
+  isBinary: integer("is_binary", { mode: "boolean" }).notNull().default(false),
+  multipartParts: text("multipart_parts"),
   contentType: text("content_type"),
   // Signature validation
   signatureProvider: text("signature_provider"),

@@ -21,6 +21,17 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
   };
 
+  const formatBytes = (size: number) => {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const truncate = (value: string, max = 1200) => {
+    if (value.length <= max) return value;
+    return `${value.slice(0, max)}\n... [truncated ${value.length - max} chars]`;
+  };
+
   if (!event) {
     return (
       <div className="panel event-detail">
@@ -40,6 +51,11 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
     event.forwardStatusCode !== null ||
     event.forwardResponseBody !== null ||
     event.forwardError !== null;
+
+  const bodyText = event.bodyText ?? event.body;
+  const multipartParts = event.multipartParts ?? [];
+  const multipartFields = multipartParts.filter((part) => part.kind === "field");
+  const multipartFiles = multipartParts.filter((part) => part.kind === "file");
 
   return (
     <div className="panel event-detail">
@@ -72,6 +88,10 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
               <span className="header-value">
                 {formatDate(event.createdAt)}
               </span>
+            </div>
+            <div className="header-row">
+              <span className="header-key">Body Size</span>
+              <span className="header-value">{formatBytes(event.bodySize)}</span>
             </div>
             {event.signatureProvider && (
               <div className="header-row">
@@ -125,7 +145,80 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
         <div className="detail-section">
           <h3>Body</h3>
           <div className="detail-content">
-            <pre>{event.body ? formatJson(event.body) : "(empty)"}</pre>
+            {event.bodyEncoding === "multipart" ? (
+              <div className="multipart-layout">
+                <div className="multipart-column">
+                  <h4 className="multipart-title">Fields ({multipartFields.length})</h4>
+                  {multipartFields.length === 0 ? (
+                    <div className="multipart-empty">No text fields.</div>
+                  ) : (
+                    multipartFields.map((field, index) => (
+                      <div
+                        key={`${field.name}-${index}`}
+                        className="multipart-card"
+                      >
+                        <div className="multipart-meta">
+                          <strong>{field.name}</strong>
+                          <span>{formatBytes(field.size)}</span>
+                        </div>
+                        <pre>{truncate(field.value || "")}</pre>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="multipart-column">
+                  <h4 className="multipart-title">Files ({multipartFiles.length})</h4>
+                  {multipartFiles.length === 0 ? (
+                    <div className="multipart-empty">No files.</div>
+                  ) : (
+                    multipartFiles.map((file, index) => {
+                      const isImage = (file.contentType || "").startsWith("image/");
+                      const canPreviewImage =
+                        isImage && !file.truncated && Boolean(file.dataBase64);
+
+                      return (
+                        <div
+                          key={`${file.name}-${file.filename || index}`}
+                          className="multipart-card"
+                        >
+                          <div className="multipart-meta">
+                            <strong>{file.name}</strong>
+                            <span>{formatBytes(file.size)}</span>
+                          </div>
+                          <div className="multipart-file-info">
+                            <div>filename: {file.filename || "(none)"}</div>
+                            <div>content-type: {file.contentType || "unknown"}</div>
+                            {file.truncated && (
+                              <div>
+                                preview truncated to 2MB for safe storage.
+                              </div>
+                            )}
+                          </div>
+                          {canPreviewImage ? (
+                            <img
+                              className="multipart-image-preview"
+                              src={`data:${file.contentType};base64,${file.dataBase64}`}
+                              alt={file.filename || file.name}
+                            />
+                          ) : (
+                            <div className="multipart-binary-message">
+                              binary content, {file.size} bytes
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            ) : event.bodyEncoding === "base64" ? (
+              <div className="multipart-binary-message">
+                binary content, {event.bodySize} bytes
+              </div>
+            ) : (
+              <pre>{bodyText ? formatJson(bodyText) : "(empty)"}</pre>
+            )}
           </div>
         </div>
 

@@ -3,6 +3,7 @@ import { db } from "../db/client.js";
 import { events, hooks } from "../db/schema.js";
 import { eq, desc, count } from "drizzle-orm";
 import type { Event, ListEventsResponse, SignatureProvider } from "@hookdump/shared";
+import { parseMultipartParts } from "../services/event-body.js";
 
 export async function eventRoutes(fastify: FastifyInstance) {
   // List events for a hook
@@ -54,7 +55,13 @@ export async function eventRoutes(fastify: FastifyInstance) {
         method: e.method,
         path: e.path,
         headers: JSON.parse(e.headers),
-        body: e.body,
+        body: e.bodyText ?? e.body,
+        bodyText: e.bodyText ?? e.body,
+        bodyBase64: e.bodyBase64,
+        bodyEncoding: (e.bodyEncoding as Event["bodyEncoding"]) ?? null,
+        bodySize: e.bodySize,
+        isBinary: e.isBinary,
+        multipartParts: parseMultipartParts(e.multipartParts),
         contentType: e.contentType,
         signatureProvider: e.signatureProvider as SignatureProvider | null,
         signatureValid: e.signatureValid,
@@ -96,7 +103,13 @@ export async function eventRoutes(fastify: FastifyInstance) {
       method: event.method,
       path: event.path,
       headers: JSON.parse(event.headers),
-      body: event.body,
+      body: event.bodyText ?? event.body,
+      bodyText: event.bodyText ?? event.body,
+      bodyBase64: event.bodyBase64,
+      bodyEncoding: (event.bodyEncoding as Event["bodyEncoding"]) ?? null,
+      bodySize: event.bodySize,
+      isBinary: event.isBinary,
+      multipartParts: parseMultipartParts(event.multipartParts),
       contentType: event.contentType,
       signatureProvider: event.signatureProvider as SignatureProvider | null,
       signatureValid: event.signatureValid,
