@@ -176,6 +176,11 @@ function App() {
             onSelectEvent={handleSelectEvent}
             selectedEventId={selectedEvent?.id}
             onDeleteEvent={handleDeleteEvent}
+            onDeleteAllEvents={async (hookId: string) => {
+              await api.deleteAllEventsForHook(hookId);
+              setSelectedEvent(null);
+              setMobileTab("events");
+            }}
           />
         </section>
         <section

@@ -60,6 +60,9 @@ export async function eventRoutes(fastify: FastifyInstance) {
         bodyBase64: e.bodyBase64,
         bodyEncoding: (e.bodyEncoding as Event["bodyEncoding"]) ?? null,
         bodySize: e.bodySize,
+        rawPreviewBase64: e.bodyBase64,
+        rawStoredBytes: e.bodySize,
+        rawTruncated: false,
         isBinary: e.isBinary,
         multipartParts: parseMultipartParts(e.multipartParts),
         contentType: e.contentType,
@@ -108,6 +111,9 @@ export async function eventRoutes(fastify: FastifyInstance) {
       bodyBase64: event.bodyBase64,
       bodyEncoding: (event.bodyEncoding as Event["bodyEncoding"]) ?? null,
       bodySize: event.bodySize,
+      rawPreviewBase64: event.bodyBase64,
+      rawStoredBytes: event.bodySize,
+      rawTruncated: false,
       isBinary: event.isBinary,
       multipartParts: parseMultipartParts(event.multipartParts),
       contentType: event.contentType,
@@ -120,6 +126,30 @@ export async function eventRoutes(fastify: FastifyInstance) {
     };
 
     return reply.send(result);
+  });
+
+  // Delete all events for a hook
+  fastify.delete<{
+    Params: { hookId: string };
+  }>("/api/hooks/:hookId/events", async (request, reply) => {
+    const { hookId } = request.params;
+
+    const hook = await db
+      .select()
+      .from(hooks)
+      .where(eq(hooks.id, hookId))
+      .get();
+
+    if (!hook) {
+      return reply.status(404).send({
+        error: "not_found",
+        message: "Hook not found",
+      });
+    }
+
+    await db.delete(events).where(eq(events.hookId, hookId));
+
+    return reply.status(204).send();
   });
 
   // Delete event

@@ -53,6 +53,10 @@ Webhook debugging tools like RequestBin and Webhook.site are **closed-source Saa
 - **Inspect** - View headers, body, and metadata in a clean 3-pane UI
 - **Replay** - Re-send captured webhooks to any target URL
 - **Custom Response** - Configure status code, headers, and body for webhook responses
+- **Multipart Support** - Parse `multipart/form-data` and inspect fields/files safely
+- **Image Preview** - Preview `image/*` uploads directly in Event Detail
+- **Binary-Safe Capture** - Store binary payloads without UTF-8 corruption (`base64` mode)
+- **Preserved Replay** - Replay/forward payloads preserving original bytes when available
 - **Webhook Forwarding** - Forward incoming webhooks to localhost or any URL (like ngrok)
 - **Monitor** - Get Slack/Discord/email alerts when webhooks stop arriving
 - **Signature Validation** - Auto-verify Stripe, GitHub, Shopify, Slack, Twilio signatures
@@ -79,6 +83,10 @@ npm install
 npm run build -w shared
 npm run dev:backend   # Terminal 1
 npm run dev:frontend  # Terminal 2
+
+# If using a reverse proxy host in dev, set this in .env:
+# VITE_ALLOWED_HOSTS=app.example.com
+
 # Open http://localhost:5173
 ```
 
@@ -96,6 +104,24 @@ curl -X POST http://localhost:8080/hooks/{hookId} \
 
 4. **View** the captured request in the UI
 5. **Replay** to forward the request to another endpoint
+
+### Multipart and Binary Payloads
+
+Hookdump supports `multipart/form-data` (including file uploads) and binary-safe storage.
+
+Example:
+
+```bash
+curl -F "title=abc" -F "image=@./photo.jpg" http://localhost:8080/hooks/{hookId}
+```
+
+In Event Detail:
+- Text parts are listed as form fields (`name` / `value`)
+- File parts show metadata (`filename`, `contentType`, `size`)
+- `image/*` files render inline preview when preview data is available
+- Non-image binary files are displayed as a safe fallback message (no corrupted raw bytes)
+
+For very large files, preview data may be truncated for memory safety.
 
 ### Custom Response
 
@@ -125,6 +151,15 @@ Now webhooks sent to Hookdump will be:
 1. Stored for inspection
 2. Forwarded to your local server
 3. Forward response recorded for debugging
+
+### Replay and Forwarding Behavior (Binary / Multipart)
+
+- JSON/text payloads are replayed as UTF-8
+- Binary payloads are replayed from stored `base64` bytes
+- Multipart payloads are reconstructed from captured parts
+
+Note:
+- If a multipart file part was truncated during capture (preview safety limit), exact replay/forward of that file is not possible.
 
 ### Monitor (Alerts)
 

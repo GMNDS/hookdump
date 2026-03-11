@@ -77,6 +77,11 @@ export const api = {
       method: "DELETE",
     }),
 
+  deleteAllEventsForHook: (hookId: string) =>
+    request<void>(`/api/hooks/${hookId}/events`, {
+      method: "DELETE",
+    }),
+
   // Replays
   createReplay: (eventId: string, data: CreateReplayRequest) =>
     request<Replay>(`/api/events/${eventId}/replay`, {
