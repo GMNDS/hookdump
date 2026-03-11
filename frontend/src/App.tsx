@@ -7,6 +7,8 @@ import { HookSettings } from "./components/HookSettings";
 import { api } from "./api/client";
 import type { Hook, Event } from "./types";
 
+type MobileTab = "hooks" | "events" | "detail";
+
 function App() {
   const [hooks, setHooks] = useState<Hook[]>([]);
   const [selectedHook, setSelectedHook] = useState<Hook | null>(null);
@@ -14,6 +16,7 @@ function App() {
   const [showReplayModal, setShowReplayModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("hooks");
 
   const loadHooks = useCallback(async () => {
     try {
@@ -39,9 +42,17 @@ function App() {
       const hook = await api.createHook({ name });
       setHooks((prev) => [hook, ...prev]);
       setSelectedHook(hook);
+      setSelectedEvent(null);
+      setMobileTab("events");
     } catch (err) {
       console.error("Failed to create hook:", err);
     }
+  };
+
+  const handleSelectHook = (hook: Hook) => {
+    setSelectedHook(hook);
+    setSelectedEvent(null);
+    setMobileTab("events");
   };
 
   const handleDeleteHook = async (hookId: string) => {
@@ -51,6 +62,7 @@ function App() {
       if (selectedHook?.id === hookId) {
         setSelectedHook(null);
         setSelectedEvent(null);
+        setMobileTab("hooks");
       }
     } catch (err) {
       console.error("Failed to delete hook:", err);
@@ -70,6 +82,7 @@ function App() {
     try {
       const event = await api.getEvent(eventId);
       setSelectedEvent(event);
+      setMobileTab("detail");
     } catch (err) {
       console.error("Failed to load event:", err);
     }
@@ -80,11 +93,16 @@ function App() {
       await api.deleteEvent(eventId);
       if (selectedEvent?.id === eventId) {
         setSelectedEvent(null);
+        setMobileTab("events");
       }
     } catch (err) {
       console.error("Failed to delete event:", err);
     }
   };
+
+  const selectedEventLabel = selectedEvent
+    ? `${selectedEvent.method} ${selectedEvent.path}`
+    : "No event selected";
 
   return (
     <div className="app">
@@ -100,25 +118,74 @@ function App() {
         <h1>Hookdump</h1>
         <span className="subtitle">Webhook Debugger</span>
       </header>
+      <div className="mobile-nav" role="navigation" aria-label="Primary sections">
+        <div className="mobile-topbar">
+          <h1>Hookdump</h1>
+          <div className="mobile-context">
+            <span>{selectedHook?.name ?? "No hook selected"}</span>
+            <span>{selectedEventLabel}</span>
+          </div>
+        </div>
+        <div className="mobile-tabs" role="tablist" aria-label="Mobile panels">
+          <button
+            className={`mobile-tab ${mobileTab === "hooks" ? "active" : ""}`}
+            onClick={() => setMobileTab("hooks")}
+            role="tab"
+            aria-selected={mobileTab === "hooks"}
+          >
+            Hooks
+          </button>
+          <button
+            className={`mobile-tab ${mobileTab === "events" ? "active" : ""}`}
+            onClick={() => setMobileTab("events")}
+            role="tab"
+            aria-selected={mobileTab === "events"}
+            disabled={!selectedHook}
+          >
+            Events
+          </button>
+          <button
+            className={`mobile-tab ${mobileTab === "detail" ? "active" : ""}`}
+            onClick={() => setMobileTab("detail")}
+            role="tab"
+            aria-selected={mobileTab === "detail"}
+            disabled={!selectedEvent}
+          >
+            Detail
+          </button>
+        </div>
+      </div>
       <main className="main">
-        <HookList
-          hooks={hooks}
-          selectedHook={selectedHook}
-          onSelect={setSelectedHook}
-          onCreate={handleCreateHook}
-          onDelete={handleDeleteHook}
-          onSettings={() => setShowSettingsModal(true)}
-        />
-        <EventList
-          hook={selectedHook}
-          onSelectEvent={handleSelectEvent}
-          selectedEventId={selectedEvent?.id}
-          onDeleteEvent={handleDeleteEvent}
-        />
-        <EventDetail
-          event={selectedEvent}
-          onReplay={() => setShowReplayModal(true)}
-        />
+        <section
+          className={`app-panel app-panel-hooks ${mobileTab === "hooks" ? "is-active" : ""}`}
+        >
+          <HookList
+            hooks={hooks}
+            selectedHook={selectedHook}
+            onSelect={handleSelectHook}
+            onCreate={handleCreateHook}
+            onDelete={handleDeleteHook}
+            onSettings={() => setShowSettingsModal(true)}
+          />
+        </section>
+        <section
+          className={`app-panel app-panel-events ${mobileTab === "events" ? "is-active" : ""}`}
+        >
+          <EventList
+            hook={selectedHook}
+            onSelectEvent={handleSelectEvent}
+            selectedEventId={selectedEvent?.id}
+            onDeleteEvent={handleDeleteEvent}
+          />
+        </section>
+        <section
+          className={`app-panel app-panel-detail ${mobileTab === "detail" ? "is-active" : ""}`}
+        >
+          <EventDetail
+            event={selectedEvent}
+            onReplay={() => setShowReplayModal(true)}
+          />
+        </section>
       </main>
       {showReplayModal && selectedEvent && (
         <ReplayModal

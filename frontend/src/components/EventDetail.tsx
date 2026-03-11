@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Event } from "../types";
 
 interface EventDetailProps {
@@ -6,6 +7,16 @@ interface EventDetailProps {
 }
 
 export function EventDetail({ event, onReplay }: EventDetailProps) {
+  const [isBodyExpanded, setIsBodyExpanded] = useState(false);
+  const [isForwardExpanded, setIsForwardExpanded] = useState(false);
+  const [expandedFields, setExpandedFields] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    setIsBodyExpanded(false);
+    setIsForwardExpanded(false);
+    setExpandedFields({});
+  }, [event?.id]);
+
   const formatJson = (str: string | null): string => {
     if (!str) return "";
     try {
@@ -27,7 +38,7 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
     return `${(size / (1024 * 1024)).toFixed(2)} MB`;
   };
 
-  const truncate = (value: string, max = 1200) => {
+  const truncate = (value: string, max: number) => {
     if (value.length <= max) return value;
     return `${value.slice(0, max)}\n... [truncated ${value.length - max} chars]`;
   };
@@ -53,6 +64,9 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
     event.forwardError !== null;
 
   const bodyText = event.bodyText ?? event.body;
+  const formattedBody = bodyText ? formatJson(bodyText) : "(empty)";
+  const bodyMaxChars = 2600;
+  const showBodyExpand = formattedBody.length > bodyMaxChars;
   const multipartParts = event.multipartParts ?? [];
   const multipartFields = multipartParts.filter((part) => part.kind === "field");
   const multipartFiles = multipartParts.filter((part) => part.kind === "file");
@@ -161,7 +175,31 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
                           <strong>{field.name}</strong>
                           <span>{formatBytes(field.size)}</span>
                         </div>
-                        <pre>{truncate(field.value || "")}</pre>
+                        {(() => {
+                          const fieldKey = `${field.name}-${index}`;
+                          const rawValue = field.value || "";
+                          const isExpanded = Boolean(expandedFields[fieldKey]);
+                          const shouldShowExpand = rawValue.length > 1200;
+
+                          return (
+                            <>
+                              <pre>{isExpanded ? rawValue : truncate(rawValue, 1200)}</pre>
+                              {shouldShowExpand && (
+                                <button
+                                  className="btn btn-secondary btn-small detail-expand-btn"
+                                  onClick={() =>
+                                    setExpandedFields((prev) => ({
+                                      ...prev,
+                                      [fieldKey]: !isExpanded,
+                                    }))
+                                  }
+                                >
+                                  {isExpanded ? "Collapse" : "Expand field"}
+                                </button>
+                              )}
+                            </>
+                          );
+                        })()}
                       </div>
                     ))
                   )}
@@ -217,7 +255,17 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
                 binary content, {event.bodySize} bytes
               </div>
             ) : (
-              <pre>{bodyText ? formatJson(bodyText) : "(empty)"}</pre>
+              <>
+                <pre>{isBodyExpanded ? formattedBody : truncate(formattedBody, bodyMaxChars)}</pre>
+                {showBodyExpand && (
+                  <button
+                    className="btn btn-secondary btn-small detail-expand-btn"
+                    onClick={() => setIsBodyExpanded((prev) => !prev)}
+                  >
+                    {isBodyExpanded ? "Collapse" : "Expand body"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -253,7 +301,28 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
                       <div style={{ color: "#888", marginBottom: "8px" }}>
                         Response Body:
                       </div>
-                      <pre>{formatJson(event.forwardResponseBody)}</pre>
+                      {(() => {
+                        const formattedForwardBody = formatJson(event.forwardResponseBody);
+                        const maxForwardChars = 2000;
+                        const canExpand = formattedForwardBody.length > maxForwardChars;
+                        return (
+                          <>
+                            <pre>
+                              {isForwardExpanded
+                                ? formattedForwardBody
+                                : truncate(formattedForwardBody, maxForwardChars)}
+                            </pre>
+                            {canExpand && (
+                              <button
+                                className="btn btn-secondary btn-small detail-expand-btn"
+                                onClick={() => setIsForwardExpanded((prev) => !prev)}
+                              >
+                                {isForwardExpanded ? "Collapse" : "Expand response"}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   )}
                 </>
@@ -261,6 +330,11 @@ export function EventDetail({ event, onReplay }: EventDetailProps) {
             </div>
           </div>
         )}
+      </div>
+      <div className="event-detail-mobile-cta">
+        <button className="btn btn-primary" onClick={onReplay}>
+          Replay Event
+        </button>
       </div>
     </div>
   );

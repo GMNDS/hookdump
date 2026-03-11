@@ -73,7 +73,7 @@ export function ReplayModal({ event, onClose }: ReplayModalProps) {
           </button>
         </div>
         <div className="modal-body">
-          <form onSubmit={handleSubmit}>
+          <form id="replay-form" onSubmit={handleSubmit}>
             <div className="form-group">
               <label>Target URL</label>
               <input
@@ -85,13 +85,6 @@ export function ReplayModal({ event, onClose }: ReplayModalProps) {
                 required
               />
             </div>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={isLoading}
-            >
-              {isLoading ? "Sending..." : "Send Replay"}
-            </button>
           </form>
 
           {error && (
@@ -151,6 +144,14 @@ export function ReplayModal({ event, onClose }: ReplayModalProps) {
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>
             Close
+          </button>
+          <button
+            type="submit"
+            form="replay-form"
+            className="btn btn-primary"
+            disabled={isLoading || !targetUrl.trim()}
+          >
+            {isLoading ? "Sending..." : "Send Replay"}
           </button>
         </div>
       </div>
