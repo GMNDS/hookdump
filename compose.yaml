@@ -41,7 +41,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.hookdump-frontend.entrypoints=websecure"
-      - "traefik.http.routers.hookdump-frontend.rule=Host(`fronthook.${HOOKDUMP_DOMAIN:?Set HOOKDUMP_DOMAIN}`)"
+      - "traefik.http.routers.hookdump-frontend.rule=Host(`hookdump.${HOOKDUMP_DOMAIN:?Set HOOKDUMP_DOMAIN}`)"
       - "traefik.http.routers.hookdump-frontend.tls=true"
       - "traefik.http.routers.hookdump-frontend.tls.certresolver=cf"
       - "traefik.http.services.hookdump-frontend.loadbalancer.server.port=80"
