@@ -1,0 +1,53 @@
+services:
+  backend:
+    image: ${HOOKDUMP_BACKEND_IMAGE:?Set HOOKDUMP_BACKEND_IMAGE in .env or Komodo}
+    pull_policy: always
+    restart: unless-stopped
+    environment:
+      DATABASE_PATH: /app/data/hookdump.db
+      MAX_EVENTS_PER_HOOK: ${MAX_EVENTS_PER_HOOK:-100}
+      PORT: "3000"
+      HOST: 0.0.0.0
+    volumes:
+      - ${HOOKDUMP_DATA_DIR:-./data}:/app/data
+    networks:
+      - hookdump_internal
+      - traefik_proxy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.hookdump-backend.entrypoints=websecure"
+      - "traefik.http.routers.hookdump-backend.rule=Host(`backhook.${HOOKDUMP_DOMAIN:?Set HOOKDUMP_DOMAIN}`) && PathPrefix(`/hooks/`)"
+      - "traefik.http.routers.hookdump-backend.tls=true"
+      - "traefik.http.routers.hookdump-backend.tls.certresolver=cf"
+      - "traefik.http.services.hookdump-backend.loadbalancer.server.port=3000"
+
+  frontend:
+    image: ${HOOKDUMP_FRONTEND_IMAGE:?Set HOOKDUMP_FRONTEND_IMAGE in .env or Komodo}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - hookdump_internal
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.hookdump-frontend.entrypoints=websecure"
+      - "traefik.http.routers.hookdump-frontend.rule=Host(`fronthook.${HOOKDUMP_DOMAIN:?Set HOOKDUMP_DOMAIN}`)"
+      - "traefik.http.routers.hookdump-frontend.tls=true"
+      - "traefik.http.routers.hookdump-frontend.tls.certresolver=cf"
+      - "traefik.http.services.hookdump-frontend.loadbalancer.server.port=80"
+
+networks:
+  hookdump_internal:
+    internal: true
+  traefik_proxy:
+    external: true
