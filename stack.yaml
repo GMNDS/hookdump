@@ -20,10 +20,11 @@ services:
           - backend
       traefik_proxy:
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      test: ["CMD", "node", "-e", "require('node:http').get('http://127.0.0.1:3000/health', res => process.exit(res.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
     deploy:
       mode: replicated
       replicas: 1
