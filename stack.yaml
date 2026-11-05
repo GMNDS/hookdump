@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  backend:
+    image: ${HOOKDUMP_BACKEND_IMAGE:?Set HOOKDUMP_BACKEND_IMAGE}
+    environment:
+      NODE_ENV: production
+      DATABASE_PATH: /app/data/hookdump.db
+      MAX_EVENTS_PER_HOOK: ${MAX_EVENTS_PER_HOOK:-100}
+      PORT: "3000"
+      HOST: 0.0.0.0
+      DEMO_MODE: "false"
+    volumes:
+      - type: bind
+        source: ${HOOKDUMP_DATA_DIR:-/srv/docker/volumes/hookdump}
+        target: /app/data
+    networks:
+      hookdump_internal:
+        aliases:
+          - backend
+      traefik_proxy:
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOOKDUMP_NODE_HOSTNAME:?Set HOOKDUMP_NODE_HOSTNAME}
+      restart_policy:
+        condition: any
+        delay: 5s
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=traefik_proxy"
+        - "traefik.http.routers.hookdump-backend.entrypoints=websecure"
+        - "traefik.http.routers.hookdump-backend.rule=Host(`backhook.${HOOKDUMP_DOMAIN:?Set HOOKDUMP_DOMAIN}`) && PathPrefix(`/hooks/`)"
+        - "traefik.http.routers.hookdump-backend.tls=true"
+        - "traefik.http.routers.hookdump-backend.tls.certresolver=cf"
+        - "traefik.http.services.hookdump-backend.loadbalancer.server.port=3000"
+
+  frontend:
+    image: ${HOOKDUMP_FRONTEND_IMAGE:?Set HOOKDUMP_FRONTEND_IMAGE}
+    networks:
+      - hookdump_internal
+      - traefik_proxy
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints:
+          - node.hostname == ${HOOKDUMP_NODE_HOSTNAME:?Set HOOKDUMP_NODE_HOSTNAME}
+      restart_policy:
+        condition: any
+        delay: 5s
+      update_config:
+        parallelism: 1
+        order: stop-first
+        failure_action: rollback
+      rollback_config:
+        parallelism: 1
+        order: stop-first
+      labels:
+        - "traefik.enable=true"
+        - "traefik.swarm.network=traefik_proxy"
+        - "traefik.http.routers.hookdump-frontend.entrypoints=websecure"
+        - "traefik.http.routers.hookdump-frontend.rule=Host(`fronthook.${HOOKDUMP_DOMAIN:?Set HOOKDUMP_DOMAIN}`)"
+        - "traefik.http.routers.hookdump-frontend.tls=true"
+        - "traefik.http.routers.hookdump-frontend.tls.certresolver=cf"
+        - "traefik.http.services.hookdump-frontend.loadbalancer.server.port=80"
+
+networks:
+  hookdump_internal:
+    driver: overlay
+    internal: true
+  traefik_proxy:
+    external: true
